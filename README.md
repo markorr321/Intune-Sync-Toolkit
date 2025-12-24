@@ -18,7 +18,7 @@ PowerShell tools for managing Microsoft Intune device synchronization. Includes 
 - **Interactive Terminal GUI** - Color-coded menu with ASCII art banner
 - **Bulk Platform Sync** - Sync all devices by OS (Windows, macOS, iOS, Android)
 - **Quick Device Operations** - Sync or check status of individual devices by name
-- **CSV/Text File Import** - Bulk sync devices from a list
+- **CSV File Import** - Bulk sync devices from a CSV file
 - **Cross-Version Support** - Works with PowerShell 5.1 and 7+
 - **Comprehensive Logging** - All operations logged to file
 
@@ -31,7 +31,7 @@ PowerShell tools for managing Microsoft Intune device synchronization. Includes 
 | `Sync-AllMacOSDevices.ps1` | Sync all macOS devices in tenant |
 | `Sync-AlliOSDevices.ps1` | Sync all iOS and iPadOS devices in tenant |
 | `Sync-AllAndroidDevices.ps1` | Sync all Android devices in tenant |
-| `SyncDevicesFromCSV.ps1` | Sync specific devices from CSV or text file |
+| `SyncDevicesFromCSV.ps1` | Sync specific devices from CSV file |
 | `Quick-DeviceSync.ps1` | Interactive quick sync by device name |
 | `Quick-DeviceSync-Check.ps1` | Check sync status of specific devices |
 
@@ -67,7 +67,6 @@ PowerShell tools for managing Microsoft Intune device synchronization. Includes 
 
   BULK OPERATIONS:
     [8]  Sync Devices from CSV File
-    [9]  Sync Devices from Text File
 
     [Q]  Quit
 ```
@@ -103,12 +102,6 @@ PowerShell tools for managing Microsoft Intune device synchronization. Includes 
 
 # Sync devices from CSV file
 .\SyncDevicesFromCSV.ps1 -CsvFile "C:\devices.csv" -CsvColumn "DeviceName"
-
-# Sync devices from text file (one device per line)
-.\SyncDevicesFromCSV.ps1 -DeviceListFile "C:\devices.txt"
-
-# Sync specific devices directly
-.\SyncDevicesFromCSV.ps1 -DeviceList @("PC-001", "PC-002", "iPhone-ABC")
 ```
 
 ## 📝 CSV File Format

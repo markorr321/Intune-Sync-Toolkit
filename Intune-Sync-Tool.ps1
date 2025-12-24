@@ -161,11 +161,6 @@ function Show-MainMenu {
     Write-Host "]  " -ForegroundColor DarkGray -NoNewline
     Write-Host "Sync Devices from CSV File" -ForegroundColor White -NoNewline
     Write-Host "                            │" -ForegroundColor DarkGray
-    Write-Host "  │    [" -ForegroundColor DarkGray -NoNewline
-    Write-Host "9" -ForegroundColor Yellow -NoNewline
-    Write-Host "]  " -ForegroundColor DarkGray -NoNewline
-    Write-Host "Sync Devices from Text File" -ForegroundColor White -NoNewline
-    Write-Host "                           │" -ForegroundColor DarkGray
     Write-Host "  │                                                                │" -ForegroundColor DarkGray
     Write-Host "  ├────────────────────────────────────────────────────────────────┤" -ForegroundColor DarkGray
     Write-Host "  │    [" -ForegroundColor DarkGray -NoNewline
@@ -480,7 +475,12 @@ function Invoke-QuickDeviceSync {
     Write-Host "  ╔════════════════════════════════════════╗" -ForegroundColor Cyan
     Write-Host "  ║         QUICK DEVICE SYNC              ║" -ForegroundColor Cyan
     Write-Host "  ║  Type device names to sync them        ║" -ForegroundColor Cyan
-    Write-Host "  ║  Type 'done' to return to menu         ║" -ForegroundColor Cyan
+    Write-Host "  ╠════════════════════════════════════════╣" -ForegroundColor Cyan
+    Write-Host "  ║  " -ForegroundColor Cyan -NoNewline
+    Write-Host "[Q]" -ForegroundColor Yellow -NoNewline
+    Write-Host " or " -ForegroundColor Cyan -NoNewline
+    Write-Host "[done]" -ForegroundColor Yellow -NoNewline
+    Write-Host " to return to menu      ║" -ForegroundColor Cyan
     Write-Host "  ╚════════════════════════════════════════╝" -ForegroundColor Cyan
     
     do {
@@ -520,7 +520,27 @@ function Invoke-QuickDeviceSync {
             }
             
             if ($device) {
+                # Get last sync time
+                if ($PSVersionTable.PSVersion.Major -ge 7) {
+                    $LastSync = $device.LastSyncDateTime
+                } else {
+                    $LastSync = $device.lastSyncDateTime
+                }
+                
+                # Format last sync display
+                if ($LastSync) {
+                    $timeDiff = (Get-Date) - $LastSync
+                    $hoursAgo = [math]::Round($timeDiff.TotalHours, 1)
+                    $LastSyncDisplay = "$($LastSync.ToString('yyyy-MM-dd HH:mm:ss')) ($hoursAgo hrs ago)"
+                    $syncColor = if ($hoursAgo -lt 24) { "Green" } elseif ($hoursAgo -lt 72) { "Yellow" } else { "Red" }
+                } else {
+                    $LastSyncDisplay = "Never"
+                    $syncColor = "Red"
+                }
+                
                 Write-Host "  Found: $deviceName | OS: $OS | User: $User" -ForegroundColor White
+                Write-Host "  Last Sync: " -NoNewline -ForegroundColor White
+                Write-Host $LastSyncDisplay -ForegroundColor $syncColor
                 
                 if (Sync-SingleDevice -DeviceId $DeviceId -DeviceName $deviceName) {
                     Write-Host "  ✓ Sync triggered successfully!" -ForegroundColor Green
@@ -544,7 +564,12 @@ function Invoke-DeviceSyncCheck {
     Write-Host "  ╔════════════════════════════════════════╗" -ForegroundColor Cyan
     Write-Host "  ║       DEVICE SYNC STATUS CHECK         ║" -ForegroundColor Cyan
     Write-Host "  ║  Type device names to check status     ║" -ForegroundColor Cyan
-    Write-Host "  ║  Type 'done' to return to menu         ║" -ForegroundColor Cyan
+    Write-Host "  ╠════════════════════════════════════════╣" -ForegroundColor Cyan
+    Write-Host "  ║  " -ForegroundColor Cyan -NoNewline
+    Write-Host "[Q]" -ForegroundColor Yellow -NoNewline
+    Write-Host " or " -ForegroundColor Cyan -NoNewline
+    Write-Host "[done]" -ForegroundColor Yellow -NoNewline
+    Write-Host " to return to menu      ║" -ForegroundColor Cyan
     Write-Host "  ╚════════════════════════════════════════╝" -ForegroundColor Cyan
     
     do {
@@ -595,30 +620,30 @@ function Invoke-DeviceSyncCheck {
                 }
                 
                 Write-Host ""
-                Write-Host "  ┌─────────────────────────────────────────┐" -ForegroundColor DarkGray
+                Write-Host "  ┌────────────────────────────────────────────────────────────┐" -ForegroundColor DarkGray
                 Write-Host "  │ " -ForegroundColor DarkGray -NoNewline
                 Write-Host "Device Found!" -ForegroundColor Green -NoNewline
-                Write-Host "                            │" -ForegroundColor DarkGray
-                Write-Host "  ├─────────────────────────────────────────┤" -ForegroundColor DarkGray
+                Write-Host "                                             │" -ForegroundColor DarkGray
+                Write-Host "  ├────────────────────────────────────────────────────────────┤" -ForegroundColor DarkGray
                 Write-Host "  │ Name:       " -ForegroundColor DarkGray -NoNewline
-                Write-Host ("{0,-27}" -f $deviceName) -ForegroundColor White -NoNewline
+                Write-Host ("{0,-46}" -f $deviceName) -ForegroundColor White -NoNewline
                 Write-Host "│" -ForegroundColor DarkGray
                 Write-Host "  │ OS:         " -ForegroundColor DarkGray -NoNewline
-                Write-Host ("{0,-27}" -f $OS.Substring(0, [Math]::Min(27, $OS.Length))) -ForegroundColor White -NoNewline
+                $osDisplay = if ($OS.Length -gt 46) { $OS.Substring(0, 46) } else { $OS }
+                Write-Host ("{0,-46}" -f $osDisplay) -ForegroundColor White -NoNewline
                 Write-Host "│" -ForegroundColor DarkGray
                 Write-Host "  │ User:       " -ForegroundColor DarkGray -NoNewline
-                $userDisplay = if ($User.Length -gt 27) { $User.Substring(0, 24) + "..." } else { $User }
-                Write-Host ("{0,-27}" -f $userDisplay) -ForegroundColor White -NoNewline
+                Write-Host ("{0,-46}" -f $User) -ForegroundColor White -NoNewline
                 Write-Host "│" -ForegroundColor DarkGray
                 Write-Host "  │ Last Sync:  " -ForegroundColor DarkGray -NoNewline
-                $syncDisplay = if ($LastSync) { "$hoursAgo hours ago" } else { "Never" }
-                Write-Host ("{0,-27}" -f $syncDisplay) -ForegroundColor $syncColor -NoNewline
+                $syncDisplay = if ($LastSync) { "$($LastSync.ToString('yyyy-MM-dd HH:mm:ss')) ($hoursAgo hrs ago)" } else { "Never" }
+                Write-Host ("{0,-46}" -f $syncDisplay) -ForegroundColor $syncColor -NoNewline
                 Write-Host "│" -ForegroundColor DarkGray
                 Write-Host "  │ Compliance: " -ForegroundColor DarkGray -NoNewline
-                $compColor = if ($Compliance -eq "Compliant") { "Green" } else { "Red" }
-                Write-Host ("{0,-27}" -f $Compliance) -ForegroundColor $compColor -NoNewline
+                $compColor = if ($Compliance -eq "compliant" -or $Compliance -eq "Compliant") { "Green" } else { "Red" }
+                Write-Host ("{0,-46}" -f $Compliance) -ForegroundColor $compColor -NoNewline
                 Write-Host "│" -ForegroundColor DarkGray
-                Write-Host "  └─────────────────────────────────────────┘" -ForegroundColor DarkGray
+                Write-Host "  └────────────────────────────────────────────────────────────┘" -ForegroundColor DarkGray
                 
             } else {
                 Write-Host "  ✗ Device '$deviceName' not found!" -ForegroundColor Red
@@ -678,39 +703,6 @@ function Invoke-SyncFromCSV {
         
     } catch {
         Write-Host "  ✗ Error reading CSV: $($_.Exception.Message)" -ForegroundColor Red
-    }
-}
-
-function Invoke-SyncFromTextFile {
-    if (-not (Connect-ToGraphIfNeeded)) { return }
-    
-    Write-Host ""
-    Write-Host "  ╔════════════════════════════════════════╗" -ForegroundColor Yellow
-    Write-Host "  ║        SYNC FROM TEXT FILE             ║" -ForegroundColor Yellow
-    Write-Host "  ╚════════════════════════════════════════╝" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  Enter text file path (one device per line): " -NoNewline -ForegroundColor White
-    $txtPath = Read-Host
-    
-    if (-not (Test-Path $txtPath)) {
-        Write-Host "  ✗ File not found: $txtPath" -ForegroundColor Red
-        return
-    }
-    
-    try {
-        $DeviceNames = Get-Content $txtPath | Where-Object { $_.Trim() -ne "" }
-        
-        Write-Host "  Found $($DeviceNames.Count) device names in file" -ForegroundColor White
-        
-        if (-not (Confirm-Action "Sync $($DeviceNames.Count) devices from file?")) {
-            Write-Host "  Operation cancelled." -ForegroundColor Yellow
-            return
-        }
-        
-        Invoke-SyncDeviceList -DeviceNames $DeviceNames
-        
-    } catch {
-        Write-Host "  ✗ Error reading file: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -836,10 +828,6 @@ function Main {
             }
             "8" {
                 Invoke-SyncFromCSV
-                Press-AnyKey
-            }
-            "9" {
-                Invoke-SyncFromTextFile
                 Press-AnyKey
             }
             "Q" {
